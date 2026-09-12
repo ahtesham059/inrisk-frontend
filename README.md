@@ -21,7 +21,7 @@ Set `VITE_API_BASE_URL` to a different backend URL when needed.
 - Reviewer login with short-lived backend-issued access token and logout
 - Coordinate and inclusive 31-day date-range validation
 - Fetch-and-store progress, success, and errors
-- Stored JSON browser with metadata and manual refresh
+- Stored JSON browser with metadata, manual refresh, and confirmed permanent deletion
 - Cached file content with max/min line chart
 - Actual/apparent temperature table with 10/20/50-row pagination
 - Responsive and keyboard-friendly layout

@@ -53,6 +53,18 @@ function WeatherDashboard({ onLogout }: { onLogout: () => void }) {
       setSelected(result.file)
     },
   })
+  const remove = useMutation({
+    mutationFn: (name: string) => api.deleteFile(name),
+    onSuccess: async (_, deletedName) => {
+      queryClient.removeQueries({ queryKey: ['file', deletedName] })
+      queryClient.setQueryData<{ files: Array<{ name: string; size: number; created_at: string }> }>(
+        ['files'],
+        (current) => current ? { files: current.files.filter((file) => file.name !== deletedName) } : current,
+      )
+      if (selected === deletedName) setSelected(null)
+      await queryClient.invalidateQueries({ queryKey: ['files'] })
+    },
+  })
   const weather = content.data && isWeatherFile(content.data) ? content.data : null
   const rows = useMemo(() => weather ? toRows(weather) : [], [weather])
   const unit = weather?.daily_units?.temperature_2m_max || '°C'
@@ -69,9 +81,10 @@ function WeatherDashboard({ onLogout }: { onLogout: () => void }) {
       <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
         {save.isSuccess && <div role="status" className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900"><CheckCircle2 className="mt-0.5 shrink-0" size={19}/><span><strong>Weather saved.</strong><span className="mt-0.5 block break-all text-emerald-700">{save.data.file}</span></span></div>}
         {save.isError && <div role="alert" className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><AlertTriangle className="shrink-0" size={19}/><span><strong>Couldn’t save weather.</strong> {save.error.message}</span></div>}
+        {remove.isError && <div role="alert" className="mb-6 flex gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800"><AlertTriangle className="shrink-0" size={19}/><span><strong>Couldn’t delete file.</strong> {remove.error.message}</span></div>}
         <div className="grid gap-6 lg:grid-cols-[.9fr_1.1fr]">
           <WeatherForm pending={save.isPending} onSubmit={(input) => save.mutate(input)} />
-          <FileBrowser files={files.data?.files ?? []} selected={selected} loading={files.isFetching} error={files.error?.message ?? null} onRefresh={() => files.refetch()} onSelect={setSelected} />
+          <FileBrowser files={files.data?.files ?? []} selected={selected} loading={files.isFetching} error={files.error?.message ?? null} deleting={remove.isPending ? remove.variables : null} onRefresh={() => files.refetch()} onSelect={setSelected} onDelete={(name) => remove.mutate(name)} />
         </div>
         <section className="mt-8 min-w-0 rounded-3xl bg-white p-6 shadow-card sm:p-8" aria-labelledby="analysis-heading">
           <div className="mb-7 flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-6">

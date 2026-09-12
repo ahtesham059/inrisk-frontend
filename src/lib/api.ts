@@ -45,4 +45,8 @@ export const api = {
   listFiles: () => request<{ files: StoredFile[] }>('/list-weather-files'),
   getFile: (name: string) =>
     request<WeatherFile>(`/weather-file-content/${encodeURIComponent(name)}`),
+  deleteFile: (name: string) =>
+    request<{ status: 'ok'; file: string }>(`/weather-file-content/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+    }),
 }
