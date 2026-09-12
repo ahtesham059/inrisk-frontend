@@ -18,6 +18,7 @@ Set `VITE_API_BASE_URL` to a different backend URL when needed.
 
 ## Features
 
+- Reviewer login with short-lived backend-issued access token and logout
 - Coordinate and inclusive 31-day date-range validation
 - Fetch-and-store progress, success, and errors
 - Stored JSON browser with metadata and manual refresh
@@ -26,6 +27,17 @@ Set `VITE_API_BASE_URL` to a different backend URL when needed.
 - Responsive and keyboard-friendly layout
 
 Dates remain date-only strings to prevent timezone shifts. Missing observations appear as an em dash in the table and gaps in the chart. The file is loaded once and used locally for visualization and pagination.
+
+The access token is kept in `sessionStorage`, sent as a bearer token, and removed on logout or any authenticated `401` response. Passwords and storage credentials never enter the frontend configuration or repository.
+
+## Design and libraries
+
+- **React and TypeScript** implement the dashboard and explicit UI states.
+- **Tailwind CSS** provides the responsive layout and design system.
+- **TanStack Query** caches archive listings/content and coordinates mutation refreshes.
+- **Recharts** renders the responsive daily maximum/minimum line chart.
+- **Lucide React** provides accessible interface icons.
+- **Vitest and Testing Library** verify validation and the login interaction; ESLint and TypeScript check the build.
 
 ## Checks and deployment
 

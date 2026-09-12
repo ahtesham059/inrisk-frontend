@@ -1,15 +1,44 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, BarChart3, CheckCircle2, CloudSun, LoaderCircle, MapPinned } from 'lucide-react'
+import { AlertTriangle, BarChart3, CheckCircle2, CloudSun, LoaderCircle, LogOut, MapPinned } from 'lucide-react'
 import { FileBrowser } from './components/FileBrowser'
 import { WeatherChart } from './components/WeatherChart'
 import { WeatherForm } from './components/WeatherForm'
 import { WeatherTable } from './components/WeatherTable'
+import { LoginPage } from './components/LoginPage'
 import { api } from './lib/api'
 import { isWeatherFile, toRows } from './lib/weather'
 import type { WeatherInput } from './types'
 
 export default function App() {
+  const queryClient = useQueryClient()
+  const [token, setToken] = useState(() => sessionStorage.getItem('inrisk_access_token'))
+
+  useEffect(() => {
+    const unauthorized = () => {
+      queryClient.clear()
+      setToken(null)
+    }
+    window.addEventListener('inrisk:unauthorized', unauthorized)
+    return () => window.removeEventListener('inrisk:unauthorized', unauthorized)
+  }, [queryClient])
+
+  function login(accessToken: string) {
+    sessionStorage.setItem('inrisk_access_token', accessToken)
+    setToken(accessToken)
+  }
+
+  function logout() {
+    sessionStorage.removeItem('inrisk_access_token')
+    queryClient.clear()
+    setToken(null)
+  }
+
+  if (!token) return <LoginPage onLogin={login} />
+  return <WeatherDashboard onLogout={logout} />
+}
+
+function WeatherDashboard({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient()
   const [selected, setSelected] = useState<string | null>(null)
   const files = useQuery({ queryKey: ['files'], queryFn: api.listFiles, refetchOnWindowFocus: false })
@@ -33,7 +62,7 @@ export default function App() {
       <header className="relative overflow-hidden bg-ink text-white">
         <div className="absolute -right-20 -top-32 h-96 w-96 rounded-full border-[70px] border-emerald-300/5" />
         <div className="relative mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
-          <div className="mb-10 flex items-center gap-3"><span className="rounded-xl bg-emerald-300 p-2.5 text-ink"><CloudSun size={24}/></span><span className="font-bold tracking-wide">InRisk Labs</span></div>
+          <div className="mb-10 flex items-center justify-between gap-3"><span className="flex items-center gap-3"><span className="rounded-xl bg-emerald-300 p-2.5 text-ink"><CloudSun size={24}/></span><span className="font-bold tracking-wide">InRisk Labs</span></span><button onClick={onLogout} className="flex items-center gap-2 rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"><LogOut size={16}/>Log out</button></div>
           <div className="max-w-3xl"><p className="mb-3 text-sm font-bold uppercase tracking-[.2em] text-emerald-300">Historical weather archive</p><h1 className="font-display text-4xl leading-tight sm:text-6xl">Weather patterns,<br/><em className="font-normal text-emerald-200">made visible.</em></h1><p className="mt-5 max-w-xl text-base leading-7 text-slate-300">Fetch up to 31 days of historical temperature data, preserve the raw record in cloud storage, and explore it here.</p></div>
         </div>
       </header>

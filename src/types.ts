@@ -36,3 +36,9 @@ export interface WeatherRow {
   apparentMax: number | null
   apparentMin: number | null
 }
+
+export interface LoginResponse {
+  access_token: string
+  token_type: 'bearer'
+  expires_in: number
+}
